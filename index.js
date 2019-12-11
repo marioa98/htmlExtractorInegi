@@ -41,19 +41,23 @@ async function extractInnerHtml(all_urls) {
         let url = all_urls[element].urlFuente;
         let id = all_urls[element].idPublicaciones
 
-        
-        try{
+
+        try {
             const browser = await pptr.launch();
             const page = await browser.newPage();
-    
-            await page.goto(url);
-            let innerHtml = await page.evaluate(() => document.body.innerHTML)
-    
-            await saveInnerHTML(innerHtml, id)
+
+            await page.goto(url, {
+                timeout: 120000
+            });
+            let innerHtml = await page.content();
+
+
+            saveInnerHTML(innerHtml, id)
 
             await browser.close();
-            
-        }catch(e){
+
+        } catch (e) {
+            console.log(`No se pudo obtener html en la pagina: ${url}`)
             console.log(`Surgio un error en: ${e}`)
         }
         skipBan(2000);
@@ -61,14 +65,14 @@ async function extractInnerHtml(all_urls) {
 }
 
 function saveInnerHTML(data, idPublicacion) {
-    
+
     fs.readdir(__dirname + '/HTML_PlumX', err => {
         if (err) {
             fs.mkdir(__dirname + '/HTML_PlumX', err => {
                 if (err) console.log(err);
                 else {
-                    fs.writeFile(__dirname + `/HTML_PlumX/${idPublicacion}.html`, data, err =>{
-                        if(err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
+                    fs.writeFile(__dirname + `/HTML_PlumX/${idPublicacion}.html`, data, err => {
+                        if (err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
                         else(`Guarado archivo ${idPublicacion}.html\n
                         ------------------------------------------------------------`)
                     })
