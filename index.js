@@ -1,23 +1,25 @@
 const fs = require('fs');
 const mysql = require('mysql');
 const pptr = require('puppeteer');
+const request = require('request')
 const keys = require('./config/keys')
 
 async function index() {
     const connection = mysql.createConnection(keys);
-    const query = "SELECT idPublicaciones, urlFuente from altmetrics_temporal WHERE proveedor = 'PlumX';"
+    const query = "SELECT idPublicaciones, urlFuente, proveedor from altmetrics_temporal WHERE proveedor != 'null';"
 
     await connection.query(query, function (err, result, field) {
         if (err) {
             console.log("Hubo un error al momento de establecer la conexión en la base de datos.");
-            return null;
+            console.log(err)
         } else {
             let all_urls = {};
 
             result.forEach((element, index) => {
                 const e = {
                     'idPublicaciones': element.idPublicaciones,
-                    'urlFuente': element.urlFuente
+                    'urlFuente': element.urlFuente,
+                    'proveedor': element.proveedor
                 }
 
                 all_urls[index] = e;
@@ -39,32 +41,37 @@ async function extractInnerHtml(all_urls) {
     for (let element in all_urls) {
 
         let url = all_urls[element].urlFuente;
-        let id = all_urls[element].idPublicaciones
+        let id = all_urls[element].idPublicaciones;
 
-        
+        let data
+
         try {
+
             const browser = await pptr.launch();
             const page = await browser.newPage();
-            
+
             await page.goto(url);
-            let innerHtml = await page.content();
             
-            saveInnerHTML(innerHtml, id)
+            data = await page.content();
+
 
             await browser.close();
 
+
         } catch (e) {
-            console.log(`No se pudo obtener html en la pagina: ${url}`)
+            console.log(`No se pudo obtener respuesta del servidor: ${url}`)
             console.log(`Surgio un error en: ${e}`)
         }
+
+        saveInnerHTML(data, id)
         await skipBan(5000);
     }
 }
 
 function saveInnerHTML(data, idPublicacion) {
-    
+
     let dir = `${__dirname}/HTML_PlumX`;
-    
+
     fs.readdir(dir, err => {
         if (err) {
             fs.mkdir(dir, (err) => {
