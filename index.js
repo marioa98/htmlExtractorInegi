@@ -1,6 +1,7 @@
 const fs = require('fs');
 const mysql = require('mysql');
 const pptr = require('puppeteer');
+const https = require('https');
 const keys = require('./config/keys')
 
 async function index() {
@@ -41,17 +42,14 @@ async function extractInnerHtml(all_urls) {
         let url = all_urls[element].urlFuente;
         let id = all_urls[element].idPublicaciones
 
-
+        
         try {
             const browser = await pptr.launch();
             const page = await browser.newPage();
-
-            await page.goto(url, {
-                timeout: 120000
-            });
+            
+            await page.goto(url);
             let innerHtml = await page.content();
-
-
+            
             saveInnerHTML(innerHtml, id)
 
             await browser.close();
@@ -60,23 +58,31 @@ async function extractInnerHtml(all_urls) {
             console.log(`No se pudo obtener html en la pagina: ${url}`)
             console.log(`Surgio un error en: ${e}`)
         }
-        skipBan(2000);
+        await skipBan(5000);
     }
 }
 
 function saveInnerHTML(data, idPublicacion) {
-
-    fs.readdir(__dirname + '/HTML_PlumX', err => {
+    
+    let dir = `${__dirname}/HTML_PlumX`;
+    
+    fs.readdir(dir, err => {
         if (err) {
-            fs.mkdir(__dirname + '/HTML_PlumX', err => {
+            fs.mkdir(dir, err => {
                 if (err) console.log(err);
                 else {
-                    fs.writeFile(__dirname + `/HTML_PlumX/${idPublicacion}.html`, data, err => {
+                    fs.writeFile(`${dir}/${idPublicacion}.html`, data, err => {
                         if (err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
                         else(`Guarado archivo ${idPublicacion}.html\n
                         ------------------------------------------------------------`)
                     })
                 }
+            })
+        }else{
+            fs.writeFile(`${dir}/${idPublicacion}.html`, data, err => {
+                if (err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
+                else(`Guarado archivo ${idPublicacion}.html\n
+                ------------------------------------------------------------`)
             })
         }
     })
