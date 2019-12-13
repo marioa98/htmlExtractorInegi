@@ -1,7 +1,6 @@
 const fs = require('fs');
 const mysql = require('mysql');
 const pptr = require('puppeteer');
-const https = require('https');
 const keys = require('./config/keys')
 
 async function index() {
@@ -68,21 +67,19 @@ function saveInnerHTML(data, idPublicacion) {
     
     fs.readdir(dir, err => {
         if (err) {
-            fs.mkdir(dir, err => {
+            fs.mkdir(dir, (err) => {
                 if (err) console.log(err);
                 else {
-                    fs.writeFile(`${dir}/${idPublicacion}.html`, data, err => {
+                    fs.writeFile(`${dir}/${idPublicacion}.html`, data, (err) => {
                         if (err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
-                        else(`Guarado archivo ${idPublicacion}.html\n
-                        ------------------------------------------------------------`)
+                        else console.log(`Guarado archivo ${idPublicacion}.html\n------------------------------------------------------------`)
                     })
                 }
             })
         }else{
-            fs.writeFile(`${dir}/${idPublicacion}.html`, data, err => {
+            fs.writeFile(`${dir}/${idPublicacion}.html`, data, (err) => {
                 if (err) console.log(`Error al momento de guardar el html del ${idPublicacion}`);
-                else(`Guarado archivo ${idPublicacion}.html\n
-                ------------------------------------------------------------`)
+                else console.log(`Guarado archivo ${idPublicacion}.html\n------------------------------------------------------------`)
             })
         }
     })
